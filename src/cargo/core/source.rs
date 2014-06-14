@@ -39,17 +39,18 @@ pub trait Source {
 
 #[deriving(Clone,PartialEq)]
 pub enum SourceKind {
-    GitKind(String)
+    GitKind(String),
+    PathKind(Path)
 }
 
 #[deriving(Clone,PartialEq)]
 pub struct SourceId {
     pub kind: SourceKind,
-    pub url: Url
+    pub url: Option<Url>
 }
 
 impl SourceId {
-    pub fn new(kind: SourceKind, url: Url) -> SourceId {
+    pub fn new(kind: SourceKind, url: Option<Url>) -> SourceId {
         SourceId { kind: kind, url: url }
     }
 }

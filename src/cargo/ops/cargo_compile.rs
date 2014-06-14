@@ -25,7 +25,7 @@ use util::config;
 use util::config::{ConfigValue};
 use core::{Package,PackageSet,Source,SourceSet};
 use core::resolver::resolve;
-use core::source::{GitKind,SourceId};
+use core::source::{GitKind,PathKind,SourceId};
 use sources::{PathSource,GitSource};
 use sources::git::GitRemote;
 use ops;
@@ -60,24 +60,29 @@ pub fn compile(manifest_path: &Path) -> CargoResult<()> {
 fn sources_for(package: &Package) -> CargoResult<SourceSet> {
     let mut sources = try!(sources_from_config([package.get_manifest_path().dir_path()]));
 
-    let git_sources: Vec<Box<Source>> = try!(result::collect(package.get_sources().iter().map(|source_id: &SourceId| {
+    let manifest_sources: Vec<Box<Source>> = try!(result::collect(package.get_sources().iter().map(|source_id: &SourceId| {
         match source_id.kind {
             GitKind(ref reference) => {
-                let remote = GitRemote::new(source_id.url.clone(), false);
+                let &SourceId { ref url, .. } = source_id;
+                let remote = GitRemote::new(url.get_ref().clone(), false);
                 let home = try!(os::homedir().require(simple_human("Cargo couldn't find a home directory")));
                 let git = home.join(".cargo").join("git");
-                let ident = url_to_path_ident(&source_id.url);
+                let ident = url_to_path_ident(url.get_ref());
 
                 // .cargo/git/db
                 // .cargo/git/checkouts
                 let db_path = git.join("db").join(ident.as_slice());
                 let checkout_path = git.join("checkouts").join(ident.as_slice()).join(reference.as_slice());
                 Ok(box GitSource::new(remote, reference.clone(), db_path, checkout_path) as Box<Source>)
+            },
+
+            PathKind(ref path) => {
+                Ok(box PathSource::new(vec!(path.clone())) as Box<Source>)
             }
         }
     })));
 
-    sources.push_all_move(git_sources);
+    sources.push_all_move(manifest_sources);
 
     Ok(SourceSet::new(sources))
 }

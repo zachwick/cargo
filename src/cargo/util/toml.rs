@@ -4,7 +4,7 @@ use url::Url;
 use std::collections::HashMap;
 use serialize::Decodable;
 
-use core::source::{SourceId,GitKind};
+use core::source::{SourceId,GitKind,PathKind};
 use core::manifest::{LibKind,Lib};
 use core::{Summary,Manifest,Target,Dependency,PackageId};
 use util::{CargoResult,Require,simple_human,toml_error};
@@ -133,12 +133,19 @@ impl TomlManifest {
                     let version = match *v {
                         SimpleDep(ref string) => string.clone(),
                         DetailedDep(ref details) => {
+                            // TODO: These two cases should not both be allowed
                             details.other.find_equiv(&"git").map(|git| {
                                 // TODO: Don't unwrap here
                                 let kind = GitKind("master".to_str());
                                 let url = url::from_str(git.as_slice()).unwrap();
-                                sources.push(SourceId::new(kind, url));
+                                sources.push(SourceId::new(kind, Some(url)));
                             });
+
+                            details.other.find_equiv(&"path").map(|path| {
+                                let kind = PathKind(Path::new(path.as_slice()));
+                                sources.push(SourceId::new(kind, None));
+                            });
+
                             details.version.clone()
                         }
                     };
