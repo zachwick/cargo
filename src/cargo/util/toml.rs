@@ -141,9 +141,12 @@ impl TomlManifest {
                                 let kind = GitKind("master".to_str());
                                 let url = url::from_str(git.as_slice()).unwrap();
                                 let source_id = SourceId::new(kind, url);
+                                // TODO: Don't do this for path
                                 sources.push(source_id.clone());
                                 source_id
                             });
+
+                            // TODO: Convert relative path dependencies to namespace
 
                             (details.version.clone(), try!(source_id.require(simple_human("Dependencies must supply a git location"))))
                         }

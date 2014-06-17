@@ -151,8 +151,8 @@ impl<E, S: Encoder<E>> Encodable<S, E> for GitCheckout {
  */
 
 impl GitRemote {
-    pub fn new(url: Url, verbose: bool) -> GitRemote {
-        GitRemote { url: url, verbose: verbose }
+    pub fn new(url: &Url, verbose: bool) -> GitRemote {
+        GitRemote { url: url.clone(), verbose: verbose }
     }
 
     pub fn get_url<'a>(&'a self) -> &'a Url {
