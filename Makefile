@@ -4,6 +4,8 @@ DESTDIR ?=
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
 
+export PATH := $(PATH):$(CURDIR)/rustc/bin
+
 # Link flags to pull in dependencies
 BINS = cargo \
 	     cargo-build \
@@ -66,7 +68,10 @@ test-unit: target/tests/test-unit
 test-integration: target/tests/test-integration
 	$< $(only)
 
-test: test-unit test-integration
+test: test-unit test-integration style
+
+style:
+	sh tests/check-style.sh
 
 clean:
 	rm -rf target
@@ -81,8 +86,9 @@ install:
 	install target/cargo target/cargo-* $(DESTDIR)$(BINDIR)
 
 # Setup phony tasks
-.PHONY: all clean distclean test test-unit test-integration libcargo
+.PHONY: all clean distclean test test-unit test-integration libcargo style
 
 # Disable unnecessary built-in rules
 .SUFFIXES:
+
 
